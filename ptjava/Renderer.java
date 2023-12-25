@@ -114,15 +114,17 @@ final class Renderer {
                                     }
                                 }
                             } else {
+                                Colour sample = Colour.Black;
                                 // Random subsampling
-                                for (int j = 0; j < spp; j++) {
-                                    var fu_ = rand.nextDouble();
-                                    var fv_ = rand.nextDouble();
-                                    Ray ray = camera.CastRay(x, finalY, w, h, fu_, fv_, rand);
-                                    Colour sample = sampler.Sample(scene, ray, rand);
-                                    buf.AddSample(x, finalY, sample);
-                                }                        
-                            }                           
+                                for (int r = 0; r < spp; r++) {
+                                    fu = (x + rand.nextDouble() * 0.5) / w;
+                                    fv = (y + rand.nextDouble() * 0.5) / h;
+                                    Ray ray = camera.CastRay(x, y, w, h, fu, fv, rand);
+                                    sample = sample.Add(sampler.Sample(scene, ray, rand));
+                                }
+                                sample.DivScalar(spp);
+                                buf.AddSample(x, y, sample);                      
+                            }                         
                         
                             // Adaptive Sampling
                             if (AdaptiveSamples > 0) {
