@@ -115,7 +115,6 @@ class ColorTexture implements Texture {
     public Texture Pow(double a) {
         for (int i = 0; i < this.Data.length; i++) {
             this.Data[i] = this.Data[i].Pow(a);
-            //t.Data[i] = t.Data[i].Pow(a);
         }
         return this;
     }
@@ -124,7 +123,6 @@ class ColorTexture implements Texture {
     public Texture MulScalar(double a) {
         for (int i = 0; i < this.Data.length; i++) {
             this.Data[i] = this.Data[i].MulScalar(a);
-            //t.Data[i] = t.Data[i].MulScalar(a);
         }
         return this;
     }
