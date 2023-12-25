@@ -97,13 +97,10 @@ public class Material {
         Vector uv = shape.UV(point);
 
         if (material.Texture != null) {
-            //material.Color = material.Texture.Sample(uv.X, uv.Y);
             material.Color = material.Texture.Sample(uv.getX(), uv.getY());
         }
 
         if (material.GlossTexture != null) {
-            //var c = material.GlossTexture.Sample(uv.X, uv.Y);
-            //material.Gloss = (c.r + c.g + c.b) / 3;
             var c = material.GlossTexture.Sample(uv.getX(), uv.getY());
             material.Gloss = (c.r + c.g + c.b) / 3;
         }
