@@ -101,11 +101,9 @@ class DefaultSampler implements Sampler {
         try {
             for (int u = 0; u < n; u++) {
                 for (int v = 0; v < n; v++) {
-                    //for (BounceType mode = ma; mode.compareTo(mb) <= 0; mode = BounceType.values()[mode.ordinal() + 1]) {
                     for (BounceType mode = ma; mode.compareTo(mb) <= 0; mode = mode.next()) {
                         var fu = ((double)u + rand.nextDouble()) / (double)n;
                         var fv = ((double)v + rand.nextDouble()) / (double)n;                    
-                        
                         var bounceResult = ray.Bounce(info, fu, fv, mode, rand);
                         Ray newRay = (Ray)bounceResult._0;
                         boolean reflected = (boolean)bounceResult._1;
