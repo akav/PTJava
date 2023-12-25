@@ -87,10 +87,6 @@ class Cylinder extends TransformedShape {
         double r = this.Radius;
         Vector o = ray.Origin;
         Vector d = ray.Direction;
-        //double a = d.X * d.X + d.Y * d.Y;
-        //double b = 2*o.X*d.X + 2*o.Y*d.Y;
-        //double c = o.X*o.X + o.Y*o.Y - r*r;
-
         double a = d.getX() * d.getX() + d.getY() * d.getY();
         double b = 2 * o.getX() * d.getX() + 2 * o.getY() * d.getY();
         double c = o.getX() * o.getX() + o.getY() * o.getY() - r * r;
@@ -109,8 +105,6 @@ class Cylinder extends TransformedShape {
             t0 = t1;
             t1 = temp;
         }
-        //double z0 = o.Z + t0*d.Z;
-        //double z1 = o.Z + t1*d.Z;
         double z0 = o.getZ() + t0 * d.getZ();
         double z1 = o.getZ() + t1 * d.getZ();
 
@@ -123,7 +117,6 @@ class Cylinder extends TransformedShape {
         {
             return new Hit(this, t1, null);
         }
-
         return Hit.NoHit;
     }
 }
