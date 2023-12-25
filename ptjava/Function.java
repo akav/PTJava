@@ -77,12 +77,6 @@ class Function implements Func {
 
     @Override
     public Vector UV(Vector p) {
-        //double x1 = Box.Min.X;
-        //double x2 = Box.Max.X;
-        //double y1 = Box.Min.Y;
-        //double y2 = Box.Max.Y;
-        //double u = p.X - x1 / x2 - x1;
-        //double v = p.Y - y1 / y2 - y1;
         double x1 = Box.Min.getX();
         double x2 = Box.Max.getX();
         double y1 = Box.Min.getY();
@@ -100,8 +94,6 @@ class Function implements Func {
     @Override
     public Vector NormalAt(Vector p) {
         double eps = 1e-3;
-        //double x = Function.func(p.X - eps, p.Y) - Function.func(p.X + eps, p.Y);
-        //double y = Function.func(p.X, p.Y - eps) - Function.func(p.X, p.Y + eps);
         double x = Function.func(p.getX() - eps, p.getY()) - Function.func(p.getX() + eps, p.getY());
         double y = Function.func(p.getX(), p.getY() - eps) - Function.func(p.getX(), p.getY() + eps);
         double z = 2 * eps;
@@ -111,6 +103,6 @@ class Function implements Func {
 
     @Override
     public double func(double x, double y) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); 
     }
 }
