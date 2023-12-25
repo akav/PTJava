@@ -87,21 +87,12 @@ class Box {
     }
 
     public boolean Contains(Vector b) {
-        //return Min.X <= b.X && Max.X >= b.X &&
-        //Min.Y <= b.Y && Max.Y >= b.Y &&
-        //Min.Z <= b.Z && Max.Z >= b.Z;
         return Min.getX() <= b.getX() && Max.getX()>= b.getX() &&
         Min.getY() <= b.getY() && Max.getY() >= b.getY() &&
         Min.getZ() <= b.getZ() && Max.getZ() >= b.getZ();
     }
 
     public boolean Intersects(Box b) {
-        //return ! (Min.X > b.Max.X 
-        //|| Max.X < b.Min.X 
-        //|| Min.Y > b.Max.Y 
-        //|| Max.Y < b.Min.Y 
-        //|| Min.Z > b.Max.Z 
-        //|| Max.Z < b.Min.Z);
         return ! (Min.getX() > b.Max.getX() 
         || Max.getX() < b.Min.getX() 
         || Min.getY() > b.Max.getY() 
@@ -111,12 +102,6 @@ class Box {
     }
 
     public Tuple2 Intersect(Ray r) {
-        //var x1 = (Min.X - r.Origin.X) / r.Direction.X;
-        //var y1 = (Min.Y - r.Origin.Y) / r.Direction.Y;
-        //var z1 = (Min.Z - r.Origin.Z) / r.Direction.Z;
-        //var x2 = (Max.X - r.Origin.X) / r.Direction.X;
-        //var y2 = (Max.Y - r.Origin.Y) / r.Direction.Y;
-        //var z2 = (Max.Z - r.Origin.Z) / r.Direction.Z;
         double x1 = (Min.getX() - r.Origin.getX()) / r.Direction.getX();
         double y1 = (Min.getY() - r.Origin.getY()) / r.Direction.getY();
         double z1 = (Min.getZ() - r.Origin.getZ()) / r.Direction.getZ();
@@ -150,26 +135,6 @@ class Box {
     }
 
     public boolean[] Partition(Axis axis, double point) {
-        /* 
-        switch (axis) {
-            case AxisX:
-                left = Min.X <= point;
-                right = Max.X >= point;
-                break;
-            case AxisY:
-                left = Min.Y <= point;
-                right = Max.Y >= point;
-                break;
-            case AxisZ:
-                left = Min.Z <= point;
-                right = Max.Z >= point;
-                break;
-            case AxisNone:
-                left = false;
-                right = false;
-                break;
-        }*/
-
         switch (axis) {
             case AxisX:
                 left = Min.getX() <= point;
