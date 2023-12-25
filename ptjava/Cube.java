@@ -59,12 +59,8 @@ class Cube extends TransformedShape {
     public Hit Intersect(Ray r) {
         Vector n = Min.Sub(r.Origin).Div(r.Direction);
         Vector f = Max.Sub(r.Origin).Div(r.Direction);
-                
         Vector min = n.Min(f);
         Vector max = n.Max(f);
-
-        //double t0 = Math.max(Math.max(min.X, min.Y), min.Z);
-        //double t1 = Math.min(Math.min(max.X, max.Y), max.Z);
         double t0 = Math.max(Math.max(min.getX(), min.getY()), min.getZ());
         double t1 = Math.min(Math.min(max.getX(), max.getY()), max.getZ());
 
@@ -78,7 +74,6 @@ class Cube extends TransformedShape {
     @Override
     public Vector UV(Vector p) {
         p = p.Sub(Min).Div(Max.Sub(Min));
-        //return new Vector(p.X, p.Z, 0);
         return new Vector(p.getX(), p.getZ(), 0);
     }
 
@@ -89,21 +84,6 @@ class Cube extends TransformedShape {
 
     @Override
     public Vector NormalAt(Vector p) {
-                
-       /* if (p.X < this.Min.X + EPS) {
-            return new Vector(-1, 0, 0);
-        } else if (p.X > this.Max.X - EPS) {
-            return new Vector(1, 0, 0);
-        } else if (p.Y < this.Min.Y + EPS) {
-            return new Vector(0, -1, 0);
-        } else if (p.Y > this.Max.Y - EPS) {
-            return new Vector(0, 1, 0);
-        } else if (p.Z < this.Min.Z + EPS) {
-            return new Vector(0, 0, -1);
-        } else if (p.Z > this.Max.Z - EPS) {
-            return new Vector(0, 0, 1);
-        }
-        return new Vector(0, 1, 0);       */
         if (p.getX() < this.Min.getX() + EPS) {
             return new Vector(-1, 0, 0);
         } else if (p.getX() > this.Max.getX() - EPS) {
@@ -125,14 +105,6 @@ class Cube extends TransformedShape {
         Vector b = Max;
         Vector z = new Vector();
         Material m = Material;
-        //var v000 = new Vector(a.X, a.Y, a.Z);
-        //var v001 = new Vector(a.X, a.Y, b.Z);
-        //var v010 = new Vector(a.X, b.Y, a.Z);
-        //var v011 = new Vector(a.X, b.Y, b.Z);
-        //var v100 = new Vector(b.X, a.Y, a.Z);
-        //var v101 = new Vector(b.X, a.Y, b.Z);
-        //var v110 = new Vector(b.X, b.Y, a.Z);
-        //var v111 = new Vector(b.X, b.Y, b.Z);
         var v000 = new Vector(a.getX(), a.getY(), a.getZ());
         var v001 = new Vector(a.getX(), a.getY(), b.getZ());
         var v010 = new Vector(a.getX(), b.getY(), a.getZ());
