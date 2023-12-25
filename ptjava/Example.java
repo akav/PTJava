@@ -60,21 +60,21 @@ public class Example {
 
     static void ellipsoid(int WIDTH, int HEIGHT, BufferedImage renderedImage, JPanel renderPanel ) throws IOException, InterruptedException {
         Scene scene = new Scene();
-        var wall = Material.GlossyMaterial(Colour.HexColor(0xFCFAE1), 1.333F, Util.Radians(30));
+        var wall = Material.GlossyMaterial(Colour.HexColor(0xFCFAE1), 1.333, Util.Radians(30));
         scene.Add(Sphere.NewSphere(new Vector(10, 10, 10), 2, Material.LightMaterial(Colour.White, 50)));
         scene.Add(Cube.NewCube(new Vector(-100, -100, -100), new Vector(-12, 100, 100), wall));
         scene.Add(Cube.NewCube(new Vector(-100, -100, -100), new Vector(100, -1, 100), wall));
-        var material = Material.GlossyMaterial(Colour.HexColor(0x167F39), 1.333F, Util.Radians(30));
+        var material = Material.GlossyMaterial(Colour.HexColor(0x167F39), 1.333, Util.Radians(30));
         var sphere = Sphere.NewSphere(new Vector(), 1, material);
 
-        for (int i = 0; i < 180; i += 30)
-        {
+        for (int i = 0; i < 180; i += 30) {
             var m = Matrix.Identity;
-            m = m.Scale(new Vector(0.3F, 1, 5)).Mul(m);
-            m = m.Rotate(new Vector(0, 1, 0), Util.Radians((double)i)).Mul(m);
+            m = m.Scale(new Vector(0.3, 1, 5));
+            m = m.Rotate(new Vector(0, 1, 0), Util.Radians((double)i));
             var shape = TransformedShape.NewTransformedShape(sphere, m);
             scene.Add(shape);
         }
+        
         var camera = Camera.LookAt(new Vector(8, 8, 0), new Vector(1, 0, 0), new Vector(0, 1, 0), 45);
         var sampler = DefaultSampler.NewSampler(4, 4);
         Renderer renderer = Renderer.NewRenderer(scene, camera, sampler, WIDTH, HEIGHT);
