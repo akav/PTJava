@@ -52,10 +52,10 @@ public class Example {
         scene.Add(Cube.NewCube(new Vector(-1000, -1, -1000), new Vector(1000, 0, 1000), Material.GlossyMaterial(Colour.HexColor(0xFFFFFF), 1.4, Util.Radians(20))));
         scene.Add(Sphere.NewSphere(new Vector(0, 5, 0), 1, Material.LightMaterial(Colour.White, 25)));
         Camera camera = Camera.LookAt(new Vector(0, 3, 6), new Vector(0, 1, 0), new Vector(0, 1, 0), 30);
-        DefaultSampler sampler = DefaultSampler.NewSampler(3,3);
+        DefaultSampler sampler = DefaultSampler.NewSampler(12,3);
         Renderer renderer = Renderer.NewRenderer(scene, camera, sampler, 1920, 1080);
         renderer.FireflySamples = 128;
-        renderer.IterativeRender("materialspheres.png", 50, renderedImage, renderPanel);
+        renderer.IterativeRender("materialspheres.png", 500, renderedImage, renderPanel);
     }
 
     static void ellipsoid(int WIDTH, int HEIGHT, BufferedImage renderedImage, JPanel renderPanel ) throws IOException, InterruptedException {
@@ -97,7 +97,7 @@ public class Example {
         Renderer renderer = Renderer.NewRenderer(scene, camera, sampler, WIDTH, HEIGHT);
         renderer.AdaptiveSamples = 32;
         renderer.FireflySamples = 256;
-        renderer.IterativeRender("example1.png", 10, renderedImage, renderPanel);
+        renderer.IterativeRender("example1.png", 1000, renderedImage, renderPanel);
     }
 
     public static void example2(int WIDTH, int HEIGHT, BufferedImage renderedImage, JPanel renderPanel) throws IOException, InterruptedException {
@@ -143,7 +143,7 @@ public class Example {
         }
         scene.Add(Cube.NewCube(new Vector(-5, 10, -5), new Vector(5, 11, 5), Material.LightMaterial(Colour.White, 5)));
         var camera = Camera.LookAt(new Vector(20, 10, 0), new Vector(8, 0, 0), new Vector(0, 1, 0), 45);
-        var sampler = DefaultSampler.NewSampler(4, 4);
+        var sampler = DefaultSampler.NewSampler(8, 8);
         var renderer = Renderer.NewRenderer(scene, camera, sampler, WIDTH, HEIGHT);
         renderer.IterativeRender("example3.png", 1000, renderedImage, renderPanel);
     }

@@ -59,8 +59,8 @@ class SDFShape extends TransformedShape implements SDF {
         double jumpSize = 0.001;
         Box box = this.BoundingBox();
         var ts = box.Intersect(ray);
-        Double t1 = (Double)ts._0;
-        Double t2 = (Double)ts._1;
+        Double t1 = ts[0];
+        Double t2 = ts[1];
 
         if (t2 < t1 || t2 < 0) {
             return Hit.NoHit;

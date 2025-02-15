@@ -1,3 +1,5 @@
+package ptjava;
+
 /*
  * The MIT License
  *
@@ -22,38 +24,42 @@
  * THE SOFTWARE.
  */
 
-package ptjava;
+import jdk.incubator.vector.DoubleVector;
+import jdk.incubator.vector.VectorSpecies;
+import jdk.incubator.vector.VectorOperators;
 
 public class Matrix {
 
-    double M11, M12, M13, M14;
-    double M21, M22, M23, M24;
-    double M31, M32, M33, M34;
-    double M41, M42, M43, M44;
+    private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_256;
+    private final DoubleVector[] rows;
 
     Matrix() {
+        this.rows = new DoubleVector[4];
+        for (int i = 0; i < 4; i++) {
+            this.rows[i] = DoubleVector.zero(SPECIES);
+        }
+    }
+
+    Matrix(DoubleVector row0, DoubleVector row1, DoubleVector row2, DoubleVector row3) {
+        this.rows = new DoubleVector[]{row0, row1, row2, row3};
     }
 
     Matrix(double x00, double x01, double x02, double x03,
            double x10, double x11, double x12, double x13,
            double x20, double x21, double x22, double x23,
            double x30, double x31, double x32, double x33) {
-        this.M11 = x00;
-        this.M12 = x01;
-        this.M13 = x02;
-        this.M14 = x03;
-        this.M21 = x10;
-        this.M22 = x11;
-        this.M23 = x12;
-        this.M24 = x13;
-        this.M31 = x20;
-        this.M32 = x21;
-        this.M33 = x22;
-        this.M34 = x23;
-        this.M41 = x30;
-        this.M42 = x31;
-        this.M43 = x32;
-        this.M44 = x33;
+        this.rows = new DoubleVector[4];
+        this.rows[0] = DoubleVector.fromArray(SPECIES, new double[]{x00, x01, x02, x03}, 0);
+        this.rows[1] = DoubleVector.fromArray(SPECIES, new double[]{x10, x11, x12, x13}, 0);
+        this.rows[2] = DoubleVector.fromArray(SPECIES, new double[]{x20, x21, x22, x23}, 0);
+        this.rows[3] = DoubleVector.fromArray(SPECIES, new double[]{x30, x31, x32, x33}, 0);
+    }
+
+    Matrix(double[] values) {
+        this.rows = new DoubleVector[4];
+        for (int i = 0; i < 4; i++) {
+            this.rows[i] = DoubleVector.fromArray(SPECIES, values, i * 4);
+        }
     }
 
     public static final Matrix Identity = new Matrix(
@@ -70,10 +76,10 @@ public class Matrix {
     }
 
     Matrix Scale(Vector v) {
-        return new Matrix(v.getX(),   0,   0, 0,
-                        0,     v.getY(),   0, 0,
-                        0,   0,     v.getZ(), 0,
-                        0,   0,   0, 1).Mul(this);
+        return new Matrix(v.getX(), 0, 0, 0,
+                          0, v.getY(), 0, 0,
+                          0, 0, v.getZ(), 0,
+                          0, 0, 0, 1).Mul(this);
     }
 
     Matrix Rotate(Vector v, double a) {
@@ -82,9 +88,9 @@ public class Matrix {
         var c = Math.cos(a);
         var m = 1 - c;
         return new Matrix(m * v.getX() * v.getX() + c, m * v.getX() * v.getY() + v.getZ() * s, m * v.getZ() * v.getX() - v.getY() * s, 0,
-                  m * v.getX() * v.getY() - v.getZ() * s, m * v.getY() * v.getY() + c, m * v.getY() * v.getZ() + v.getX() * s, 0,
-                  m * v.getZ() * v.getX() + v.getY() * s, m * v.getY() * v.getZ() - v.getX() * s, m * v.getZ() * v.getZ() + c, 0,
-                  0, 0, 0, 1).Mul(this);
+                          m * v.getX() * v.getY() - v.getZ() * s, m * v.getY() * v.getY() + c, m * v.getY() * v.getZ() + v.getX() * s, 0,
+                          m * v.getZ() * v.getX() + v.getY() * s, m * v.getY() * v.getZ() - v.getX() * s, m * v.getZ() * v.getZ() + c, 0,
+                          0, 0, 0, 1).Mul(this);
     }
 
     Matrix Frustum(double l, double r, double b, double t, double n, double f) {
@@ -93,16 +99,16 @@ public class Matrix {
         double t3 = t - b;
         double t4 = f - n;
         return new Matrix(t1 / t2, 0, (r + l) / t2, 0,
-                  0, t1 / t3, (t + b) / t3, 0,
-                  0, 0, (-f - n) / t4, (-t1 * f) / t4,
-                  0, 0, -1, 0);
+                          0, t1 / t3, (t + b) / t3, 0,
+                          0, 0, (-f - n) / t4, (-t1 * f) / t4,
+                          0, 0, -1, 0);
     }
 
     Matrix Orthographic(double l, double r, double b, double t, double n, double f) {
         return new Matrix(2 / (r - l), 0, 0, -(r + l) / (r - l),
-                0, 2 / (t - b), 0, -(t + b) / (t - b),
-                0, 0, -2 / (f - n), -(f + n) / (f - n),
-                0, 0, 0, 1);
+                          0, 2 / (t - b), 0, -(t + b) / (t - b),
+                          0, 0, -2 / (f - n), -(f + n) / (f - n),
+                          0, 0, 0, 1);
     }
 
     Matrix Perspective(double fovy, double aspect, double near, double far) {
@@ -117,9 +123,9 @@ public class Matrix {
         var s = f.Cross(up).Normalize();
         var u = s.Cross(f);
         var m = new Matrix(s.getX(), u.getX(), f.getX(), 0,
-                s.getY(), u.getY(), f.getY(), 0,
-                s.getZ(), u.getZ(), f.getZ(), 0,
-                0, 0, 0, 1);
+                           s.getY(), u.getY(), f.getY(), 0,
+                           s.getZ(), u.getZ(), f.getZ(), 0,
+                           0, 0, 0, 1);
 
         return m.Transpose().Inverse().Translate(m, eye);
     }
@@ -129,38 +135,40 @@ public class Matrix {
     }
 
     Matrix Mul(Matrix b) {
-        Matrix m = new Matrix();
-        m.M11 = M11 * b.M11 + M12 * b.M21 + M13 * b.M31 + M14 * b.M41;
-        m.M21 = M21 * b.M11 + M22 * b.M21 + M23 * b.M31 + M24 * b.M41;
-        m.M31 = M31 * b.M11 + M32 * b.M21 + M33 * b.M31 + M34 * b.M41;
-        m.M41 = M41 * b.M11 + M42 * b.M21 + M43 * b.M31 + M44 * b.M41;
-        m.M12 = M11 * b.M12 + M12 * b.M22 + M13 * b.M32 + M14 * b.M42;
-        m.M22 = M21 * b.M12 + M22 * b.M22 + M23 * b.M32 + M24 * b.M42;
-        m.M32 = M31 * b.M12 + M32 * b.M22 + M33 * b.M32 + M34 * b.M42;
-        m.M42 = M41 * b.M12 + M42 * b.M22 + M43 * b.M32 + M44 * b.M42;
-        m.M13 = M11 * b.M13 + M12 * b.M23 + M13 * b.M33 + M14 * b.M43;
-        m.M23 = M21 * b.M13 + M22 * b.M23 + M23 * b.M33 + M24 * b.M43;
-        m.M33 = M31 * b.M13 + M32 * b.M23 + M33 * b.M33 + M34 * b.M43;
-        m.M43 = M41 * b.M13 + M42 * b.M23 + M43 * b.M33 + M44 * b.M43;
-        m.M14 = M11 * b.M14 + M12 * b.M24 + M13 * b.M34 + M14 * b.M44;
-        m.M24 = M21 * b.M14 + M22 * b.M24 + M23 * b.M34 + M24 * b.M44;
-        m.M34 = M31 * b.M14 + M32 * b.M24 + M33 * b.M34 + M34 * b.M44;
-        m.M44 = M41 * b.M14 + M42 * b.M24 + M43 * b.M34 + M44 * b.M44;
-        return m;
+        DoubleVector[] resultRows = new DoubleVector[4];
+        for (int i = 0; i < 4; i++) {
+            DoubleVector row = this.rows[i];
+            double[] rowValues = new double[4];
+            row.intoArray(rowValues, 0);
+            DoubleVector resultRow = DoubleVector.zero(SPECIES);
+            for (int j = 0; j < 4; j++) {
+                DoubleVector col = DoubleVector.fromArray(SPECIES, new double[]{
+                    b.rows[0].lane(j),
+                    b.rows[1].lane(j),
+                    b.rows[2].lane(j),
+                    b.rows[3].lane(j)
+                }, 0);
+                resultRow = resultRow.add(row.broadcast(rowValues[j]).mul(col));
+            }
+            resultRows[i] = resultRow;
+        }
+        return new Matrix(resultRows[0], resultRows[1], resultRows[2], resultRows[3]);
     }
 
     Vector MulPosition(Vector b) {
-        var x = M11 * b.getX() + M12 * b.getY() + M13 * b.getZ() + M14;
-        var y = M21 * b.getX() + M22 * b.getY() + M23 * b.getZ() + M24;
-        var z = M31 * b.getX() + M32 * b.getY() + M33 * b.getZ() + M34;
-        return new Vector(x, y, z);
+        double[] result = new double[4];
+        for (int i = 0; i < 4; i++) {
+            result[i] = this.rows[i].mul(b.vec).reduceLanes(VectorOperators.ADD);
+        }
+        return new Vector(result[0], result[1], result[2]);
     }
 
     Vector MulDirection(Vector b) {
-        double x = M11 * b.getX() + M12 * b.getY() + M13 * b.getZ();
-        double y = M21 * b.getX() + M22 * b.getY() + M23 * b.getZ();
-        double z = M31 * b.getX() + M32 * b.getY() + M33 * b.getZ();
-        return new Vector(x, y, z).Normalize();
+        double[] result = new double[4];
+        for (int i = 0; i < 4; i++) {
+            result[i] = this.rows[i].mul(b.vec).reduceLanes(VectorOperators.ADD);
+        }
+        return new Vector(result[0], result[1], result[2]).Normalize();
     }
 
     Ray MulRay(Ray b) {
@@ -168,6 +176,19 @@ public class Matrix {
     }
 
     Box MulBox(Box box) {
+        double M11 = rows[0].lane(0);
+        double M21 = rows[1].lane(0);
+        double M31 = rows[2].lane(0);
+        double M12 = rows[0].lane(1);
+        double M22 = rows[1].lane(1);
+        double M32 = rows[2].lane(1);
+        double M13 = rows[0].lane(2);
+        double M23 = rows[1].lane(2);
+        double M33 = rows[2].lane(2);
+        double M14 = rows[0].lane(3);
+        double M24 = rows[1].lane(3);
+        double M34 = rows[2].lane(3);
+
         Vector r = new Vector(M11, M21, M31);
         Vector u = new Vector(M12, M22, M32);
         Vector b = new Vector(M13, M23, M33);
@@ -187,43 +208,77 @@ public class Matrix {
     }
 
     Matrix Transpose() {
-        return new Matrix(M11, M21, M31, M41, M12, M22, M32, M42, M13, M23, M33, M43, M14, M24, M34, M44);
+        double[] transposedValues = new double[16];
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                transposedValues[i * 4 + j] = this.rows[j].lane(i);
+            }
+        }
+        return new Matrix(transposedValues);
     }
 
     double Determinant() {
-        return (M11 * M22 * M33 * M44 - M11 * M22 * M34 * M43 +
-        M11 * M23 * M34 * M42 - M11 * M23 * M32 * M44 +
-        M11 * M24 * M32 * M43 - M11 * M24 * M33 * M42 -
-        M12 * M23 * M34 * M41 + M12 * M23 * M31 * M44 -
-        M12 * M24 * M31 * M43 + M12 * M24 * M33 * M41 -
-        M12 * M21 * M33 * M44 + M12 * M21 * M34 * M43 +
-        M13 * M24 * M31 * M42 - M13 * M24 * M32 * M41 +
-        M13 * M21 * M32 * M44 - M13 * M21 * M34 * M42 +
-        M13 * M22 * M34 * M41 - M13 * M22 * M31 * M44 -
-        M14 * M21 * M32 * M43 + M14 * M21 * M33 * M42 -
-        M14 * M22 * M33 * M41 + M14 * M22 * M31 * M43 -
-        M14 * M23 * M31 * M42 + M14 * M23 * M32 * M41);
+        double[] m = new double[16];
+        for (int i = 0; i < 4; i++) {
+            this.rows[i].intoArray(m, i * 4);
+        }
+        return (m[0] * m[5] * m[10] * m[15] - m[0] * m[5] * m[11] * m[14] +
+                m[0] * m[6] * m[11] * m[13] - m[0] * m[6] * m[9] * m[15] +
+                m[0] * m[7] * m[9] * m[14] - m[0] * m[7] * m[10] * m[13] -
+                m[1] * m[6] * m[11] * m[12] + m[1] * m[6] * m[8] * m[15] -
+                m[1] * m[7] * m[8] * m[14] + m[1] * m[7] * m[10] * m[12] -
+                m[1] * m[4] * m[10] * m[15] + m[1] * m[4] * m[11] * m[14] +
+                m[2] * m[7] * m[8] * m[13] - m[2] * m[7] * m[9] * m[12] +
+                m[2] * m[4] * m[9] * m[15] - m[2] * m[4] * m[11] * m[13] +
+                m[2] * m[5] * m[11] * m[12] - m[2] * m[5] * m[8] * m[15] -
+                m[3] * m[4] * m[9] * m[14] + m[3] * m[4] * m[10] * m[13] -
+                m[3] * m[5] * m[10] * m[12] + m[3] * m[5] * m[8] * m[14] -
+                m[3] * m[6] * m[8] * m[13] + m[3] * m[6] * m[9] * m[12]);
     }
 
     Matrix Inverse() {
         Matrix m = new Matrix();
         double d = Determinant();
-        m.M11 = (M23 * M34 * M42 - M24 * M33 * M42 + M24 * M32 * M43 - M22 * M34 * M43 - M23 * M32 * M44 + M22 * M33 * M44) / d;
-        m.M12 = (M14 * M33 * M42 - M13 * M34 * M42 - M14 * M32 * M43 + M12 * M34 * M43 + M13 * M32 * M44 - M12 * M33 * M44) / d;
-        m.M13 = (M13 * M24 * M42 - M14 * M23 * M42 + M14 * M22 * M43 - M12 * M24 * M43 - M13 * M22 * M44 + M12 * M23 * M44) / d;
-        m.M14 = (M14 * M23 * M32 - M13 * M24 * M32 - M14 * M22 * M33 + M12 * M24 * M33 + M13 * M22 * M34 - M12 * M23 * M34) / d;
-        m.M21 = (M24 * M33 * M41 - M23 * M34 * M41 - M24 * M31 * M43 + M21 * M34 * M43 + M23 * M31 * M44 - M21 * M33 * M44) / d;
-        m.M22 = (M13 * M34 * M41 - M14 * M33 * M41 + M14 * M31 * M43 - M11 * M34 * M43 - M13 * M31 * M44 + M11 * M33 * M44) / d;
-        m.M23 = (M14 * M23 * M41 - M13 * M24 * M41 - M14 * M21 * M43 + M11 * M24 * M43 + M13 * M21 * M44 - M11 * M23 * M44) / d;
-        m.M24 = (M13 * M24 * M31 - M14 * M23 * M31 + M14 * M21 * M33 - M11 * M24 * M33 - M13 * M21 * M34 + M11 * M23 * M34) / d;
-        m.M31 = (M22 * M34 * M41 - M24 * M32 * M41 + M24 * M31 * M42 - M21 * M34 * M42 - M22 * M31 * M44 + M21 * M32 * M44) / d;
-        m.M32 = (M14 * M32 * M41 - M12 * M34 * M41 - M14 * M31 * M42 + M11 * M34 * M42 + M12 * M31 * M44 - M11 * M32 * M44) / d;
-        m.M33 = (M12 * M24 * M41 - M14 * M22 * M41 + M14 * M21 * M42 - M11 * M24 * M42 - M12 * M21 * M44 + M11 * M22 * M44) / d;
-        m.M34 = (M14 * M22 * M31 - M12 * M24 * M31 - M14 * M21 * M32 + M11 * M24 * M32 + M12 * M21 * M34 - M11 * M22 * M34) / d;
-        m.M41 = (M23 * M32 * M41 - M22 * M33 * M41 - M23 * M31 * M42 + M21 * M33 * M42 + M22 * M31 * M43 - M21 * M32 * M43) / d;
-        m.M42 = (M12 * M33 * M41 - M13 * M32 * M41 + M13 * M31 * M42 - M11 * M33 * M42 - M12 * M31 * M43 + M11 * M32 * M43) / d;
-        m.M43 = (M13 * M22 * M41 - M12 * M23 * M41 - M13 * M21 * M42 + M11 * M23 * M42 + M12 * M21 * M43 - M11 * M22 * M43) / d;
-        m.M44 = (M12 * M23 * M31 - M13 * M22 * M31 + M13 * M21 * M32 - M11 * M23 * M32 - M12 * M21 * M33 + M11 * M22 * M33) / d;
+        double M11 = rows[0].lane(0);
+        double M12 = rows[0].lane(1);
+        double M13 = rows[0].lane(2);
+        double M14 = rows[0].lane(3);
+        double M21 = rows[1].lane(0);
+        double M22 = rows[1].lane(1);
+        double M23 = rows[1].lane(2);
+        double M24 = rows[1].lane(3);
+        double M31 = rows[2].lane(0);
+        double M32 = rows[2].lane(1);
+        double M33 = rows[2].lane(2);
+        double M34 = rows[2].lane(3);
+        double M41 = rows[3].lane(0);
+        double M42 = rows[3].lane(1);
+        double M43 = rows[3].lane(2);
+        double M44 = rows[3].lane(3);
+        m.rows[0] = DoubleVector.fromArray(SPECIES, new double[]{
+            (M23 * M34 * M42 - M24 * M33 * M42 + M24 * M32 * M43 - M22 * M34 * M43 - M23 * M32 * M44 + M22 * M33 * M44) / d,
+            (M14 * M33 * M42 - M13 * M34 * M42 - M14 * M32 * M43 + M12 * M34 * M43 + M13 * M32 * M44 - M12 * M33 * M44) / d,
+            (M13 * M24 * M42 - M14 * M23 * M42 + M14 * M22 * M43 - M12 * M24 * M43 - M13 * M22 * M44 + M12 * M23 * M44) / d,
+            (M14 * M23 * M32 - M13 * M24 * M32 - M14 * M22 * M33 + M12 * M24 * M33 + M13 * M22 * M34 - M12 * M23 * M34) / d
+        }, 0);
+        m.rows[1] = DoubleVector.fromArray(SPECIES, new double[]{
+            (M24 * M33 * M41 - M23 * M34 * M41 - M24 * M31 * M43 + M21 * M34 * M43 + M23 * M31 * M44 - M21 * M33 * M44) / d,
+            (M13 * M34 * M41 - M14 * M33 * M41 + M14 * M31 * M43 - M11 * M34 * M43 - M13 * M31 * M44 + M11 * M33 * M44) / d,
+            (M14 * M23 * M41 - M13 * M24 * M41 - M14 * M21 * M43 + M11 * M24 * M43 + M13 * M21 * M44 - M11 * M23 * M44) / d,
+            (M13 * M24 * M31 - M14 * M23 * M31 + M14 * M21 * M33 - M11 * M24 * M33 - M13 * M21 * M34 + M11 * M23 * M34) / d
+        }, 0);
+        m.rows[2] = DoubleVector.fromArray(SPECIES, new double[]{
+            (M22 * M34 * M41 - M24 * M32 * M41 + M24 * M31 * M42 - M21 * M34 * M42 - M22 * M31 * M44 + M21 * M32 * M44) / d,
+            (M14 * M32 * M41 - M12 * M34 * M41 - M14 * M31 * M42 + M11 * M34 * M42 + M12 * M31 * M44 - M11 * M32 * M44) / d,
+            (M12 * M24 * M41 - M14 * M22 * M41 + M14 * M21 * M42 - M11 * M24 * M42 - M12 * M21 * M44 + M11 * M22 * M44) / d,
+            (M14 * M22 * M31 - M12 * M24 * M31 - M14 * M21 * M32 + M11 * M24 * M32 + M12 * M21 * M34 - M11 * M22 * M34) / d
+        }, 0);
+        m.rows[3] = DoubleVector.fromArray(SPECIES, new double[]{
+            (M23 * M32 * M41 - M22 * M33 * M41 - M23 * M31 * M42 + M21 * M33 * M42 + M22 * M31 * M43 - M21 * M32 * M43) / d,
+            (M12 * M33 * M41 - M13 * M32 * M41 + M13 * M31 * M42 - M11 * M33 * M42 - M12 * M31 * M43 + M11 * M32 * M43) / d,
+            (M13 * M22 * M41 - M12 * M23 * M41 - M13 * M21 * M42 + M11 * M23 * M42 + M12 * M21 * M43 - M11 * M22 * M43) / d,
+            (M12 * M23 * M31 - M13 * M22 * M31 + M13 * M21 * M32 - M11 * M23 * M32 - M12 * M21 * M33 + M11 * M22 * M33) / d
+        }, 0);
         return m;
     }
 }

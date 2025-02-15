@@ -23,10 +23,10 @@
  */
 
 package ptjava;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.SplittableRandom;
 
 interface Sampler {
-    Colour Sample(Scene scene, Ray ray, ThreadLocalRandom rand);
+    Colour Sample(Scene scene, Ray ray, SplittableRandom  rand);
 }
 
 class DefaultSampler implements Sampler {
@@ -60,12 +60,12 @@ class DefaultSampler implements Sampler {
     }
 
     @Override
-    public Colour Sample(Scene scene, Ray ray, ThreadLocalRandom rand) {
+    public Colour Sample(Scene scene, Ray ray, SplittableRandom rand) {
 
         return sample(scene, ray, true, FirstHitSamples, 0, rand);
     }
 
-    Colour sample(Scene scene, Ray ray, boolean emission, int samples, int depth, ThreadLocalRandom rand) {
+    Colour sample(Scene scene, Ray ray, boolean emission, int samples, int depth, SplittableRandom rand) {
         if (depth > MaxBounces) {
             return Colour.Black;
         }
@@ -84,13 +84,13 @@ class DefaultSampler implements Sampler {
             if (this.DirectLighting && !emission) {
                 return Colour.Black;
             }
-            result = result.Add(material.Color.MulScalar(material.Emittance * (double) samples));
+            result = result.Add(material.Color.MulScalar(material.Emittance * samples));
         }
 
         int n = (int) Math.sqrt(samples);
         BounceType ma, mb;
 
-        if (this.specularMode == SpecularMode.SpecularModeAll || depth == 0 && this.specularMode == SpecularMode.SpecularModeFirst) {
+        if (this.specularMode == SpecularMode.SpecularModeAll || (depth == 0 && this.specularMode == SpecularMode.SpecularModeFirst)) {
             ma = BounceType.BounceTypeDiffuse;
             mb = BounceType.BounceTypeSpecular;
         } else {
@@ -101,34 +101,32 @@ class DefaultSampler implements Sampler {
         try {
             for (int u = 0; u < n; u++) {
                 for (int v = 0; v < n; v++) {
+                    double fu = (u + rand.nextDouble()) / n;
+                    double fv = (v + rand.nextDouble()) / n;
                     for (BounceType mode = ma; mode.compareTo(mb) <= 0; mode = mode.next()) {
-                        var fu = ((double)u + rand.nextDouble()) / (double)n;
-                        var fv = ((double)v + rand.nextDouble()) / (double)n;                    
                         var bounceResult = ray.Bounce(info, fu, fv, mode, rand);
-                        Ray newRay = (Ray)bounceResult._0;
-                        boolean reflected = (boolean)bounceResult._1;
-                        double p = (double)bounceResult._2;
-                        
+                        Ray newRay = bounceResult.getRay();
+                        boolean reflected = bounceResult.isReflected();
+                        double p = bounceResult.getProbability();
+
                         if (mode == BounceType.BounceTypeAny) {
                             p = 1.0;
                         }
 
-                        if (p > 0 && reflected) {
-                            // specular
+                        if (p > 0) {
                             var indirect = sample(scene, newRay, reflected, 1, depth + 1, rand);
-                            Colour tinted = indirect.Mix(material.Color.Mul(indirect), material.Tint);
-                            result = result.Add(tinted.MulScalar(p));
-                        }
-
-                        if (p > 0 && !reflected) {
-                            // diffuse
-                            Colour indirect = sample(scene, newRay, reflected, 1, depth + 1, rand);
-                            Colour direct = Colour.Black;
-                            
-                            if (DirectLighting) {
-                                direct = sampleLights(scene, info.Ray, rand);
+                            if (reflected) {
+                                // specular
+                                Colour tinted = indirect.Mix(material.Color.Mul(indirect), material.Tint);
+                                result = result.Add(tinted.MulScalar(p));
+                            } else {
+                                // diffuse
+                                Colour direct = Colour.Black;
+                                if (DirectLighting) {
+                                    direct = sampleLights(scene, info.Ray, rand);
+                                }
+                                result = result.Add(material.Color.Mul(direct.Add(indirect)).MulScalar(p));
                             }
-                            result = result.Add(material.Color.Mul(direct.Add(indirect)).MulScalar(p));
                         }
 
                         if (mode == mb) {
@@ -140,7 +138,7 @@ class DefaultSampler implements Sampler {
         } catch (Exception e) {
             System.out.println(e);
         }
-        return result.DivScalar((double) (n * n));
+        return result.DivScalar(n * n);
     }    
 
     Colour sampleEnvironment(Scene scene, Ray ray) {
@@ -155,7 +153,7 @@ class DefaultSampler implements Sampler {
         return scene.Color;
     }
 
-    Colour sampleLights(Scene scene, Ray n, ThreadLocalRandom rand) {
+    Colour sampleLights(Scene scene, Ray n, SplittableRandom rand) {
         int nLights = scene.Lights.length;
         if (nLights == 0) {
             return Colour.Black;
@@ -176,8 +174,7 @@ class DefaultSampler implements Sampler {
         }
     }
 
-    Colour sampleLight(Scene scene, Ray n, ThreadLocalRandom rand, IShape light) {
-        
+    Colour sampleLight(Scene scene, Ray n, SplittableRandom rand, IShape light) {
         Vector center = new Vector();
         double radius = 0;
 
@@ -192,68 +189,59 @@ class DefaultSampler implements Sampler {
             }
         }
 
-        var point = center;
+        Vector point = center;
 
-        if (this.SoftShadows)
-        {
-            for (;;)
-            {
-                var x = rand.nextDouble() * 2 - 1;
-                var y = rand.nextDouble() * 2 - 1;
-                if (x * x + y * y <= 1)
-                {
-                    var l = center.Sub(n.Origin).Normalize();
-                    var u = l.Cross(Vector.RandomUnitVector(rand)).Normalize();
-                    var v = l.Cross(u);
-                    point = new Vector();
-                    point = point.Add(u.MulScalar(x * radius));
-                    point = point.Add(v.MulScalar(y * radius));
-                    point = point.Add(center);
+        if (this.SoftShadows) {
+            while (true) {
+                double x = rand.nextDouble() * 2 - 1;
+                double y = rand.nextDouble() * 2 - 1;
+                if (x * x + y * y <= 1) {
+                    Vector l = center.Sub(n.Origin).Normalize();
+                    Vector u = l.Cross(Vector.RandomUnitVector(rand)).Normalize();
+                    Vector v = l.Cross(u);
+                    point = center.Add(u.MulScalar(x * radius)).Add(v.MulScalar(y * radius));
                     break;
                 }
             }
         }
 
-        // construct ray toward light point
+        // Construct ray toward light point
         Ray ray = new Ray(n.Origin, point.Sub(n.Origin).Normalize());
 
-        // get cosine term
-        var diffuse = ray.Direction.Dot(n.Direction);
+        // Get cosine term
+        double diffuse = ray.Direction.Dot(n.Direction);
 
-        if (diffuse <= 0)
-        {
+        if (diffuse <= 0) {
             return Colour.Black;
         }
 
-        // check for light visibility
+        // Check for light visibility
         Hit hit = scene.Intersect(ray);
 
-        if (!hit.Ok() || hit.Shape != light)
-        {
+        if (!hit.Ok() || hit.Shape != light) {
             return Colour.Black;
         }
 
-        // compute solid angle (hemisphere coverage)
-        var hyp = center.Sub(n.Origin).Length();
-        var opp = radius;
-        var theta = Math.asin(opp / hyp);
-        var adj = opp / Math.tan(theta);
-        var d = Math.cos(theta) * adj;
-        var r = Math.sin(theta) * adj;
-        var coverage = (r * r) / (d * d);
+        // Compute solid angle (hemisphere coverage)
+        double hyp = center.Sub(n.Origin).Length();
+        double opp = radius;
+        double theta = Math.asin(opp / hyp);
+        double adj = opp / Math.tan(theta);
+        double d = Math.cos(theta) * adj;
+        double r = Math.sin(theta) * adj;
+        double coverage = (r * r) / (d * d);
 
-        if (hyp < opp)
-        {
+        if (hyp < opp) {
             coverage = 1;
         }
 
         coverage = Math.min(coverage, 1);
 
-        // get material properties from light
+        // Get material properties from light
         Material material = Material.MaterialAt(light, point);
 
-        // combine factors
-        var m = material.Emittance * diffuse * coverage;
+        // Combine factors
+        double m = material.Emittance * diffuse * coverage;
         return material.Color.MulScalar(m);
     }
 }

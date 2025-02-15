@@ -2,10 +2,5 @@
     "java.project.sourcePaths": [
         "."
     ],
-    "java.project.referencedLibraries": [
-        "d:\\dev\\commons-lang3-3.17.0\\commons-lang3-3.17.0.jar"
-    ],
-    "java.debug.settings.vmArgs": [ 
-        "--add-modules=jdk.incubator.vector"
-    ]
+    "java.debug.settings.vmArgs": "--add-modules=jdk.incubator.vector"
 }

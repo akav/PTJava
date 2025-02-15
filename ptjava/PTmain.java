@@ -54,12 +54,15 @@ public class PTmain {
 
         Thread renderingThread = new Thread(() -> {
             try {
-                Example.qbert(WIDTH, HEIGHT, renderedImage, renderPanel);
+                Example.example3(WIDTH, HEIGHT, renderedImage, renderPanel);
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
-        }
-    });
+            } catch (Exception e) {
+                System.err.println("An unexpected error occurred: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
 
-    renderingThread.start();
+        renderingThread.start();
     }
 }

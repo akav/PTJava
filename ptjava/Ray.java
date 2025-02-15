@@ -24,7 +24,7 @@
 
 package ptjava;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.SplittableRandom;
 import ptjava.Hit.HitInfo;
 
 public class Ray {
@@ -54,7 +54,7 @@ public class Ray {
         return this.Direction.Reflectance(i.Direction, n1, n2);
     }
 
-    public Ray WeightedBounce(double u, double v, ThreadLocalRandom rand) {
+    public Ray WeightedBounce(double u, double v, SplittableRandom rand) {
         var radius = Math.sqrt(u);
         var theta = 2 * Math.PI * v;
         var s = Direction.Cross(Vector.RandomUnitVector(rand)).Normalize();
@@ -66,11 +66,11 @@ public class Ray {
         return new Ray(Origin, d);
     }
 
-    public Ray ConeBounce(double theta, double u, double v, ThreadLocalRandom rand) {
+    public Ray ConeBounce(double theta, double u, double v, SplittableRandom rand) {
         return new Ray(this.Origin, Util.Cone(Direction, theta, u, v, rand));
     }
 
-    public Tuple3 Bounce(HitInfo info, double u, double v, BounceType bounceType, ThreadLocalRandom rand) {
+    public BounceResult Bounce(HitInfo info, double u, double v, BounceType bounceType, SplittableRandom rand) {
         Ray n = info.Ray;
         Material material = info.material;
 
@@ -108,12 +108,36 @@ public class Ray {
 
         if (reflect) {
             var reflected = n.Reflect(this);
-            return Tuple.valueOf(reflected.ConeBounce(material.Gloss, u, v, rand), true, p);
+            return new BounceResult(reflected.ConeBounce(material.Gloss, u, v, rand), true, p);
         } else if (material.Transparent) {
             var refracted = n.Refract(this, n1, n2);
-            return Tuple.valueOf(refracted.ConeBounce(material.Gloss, u, v, rand), true, 1-p);
+            return new BounceResult(refracted.ConeBounce(material.Gloss, u, v, rand), true, 1-p);
         } else {
-            return Tuple.valueOf(n.WeightedBounce(u, v, rand), false, 1 - p);
+            return new BounceResult(n.WeightedBounce(u, v, rand), false, 1 - p);
+        }
+    }
+
+    public static class BounceResult {
+        private Ray ray;
+        private boolean reflected;
+        private double probability;
+    
+        public BounceResult(Ray ray, boolean reflected, double probability) {
+            this.ray = ray;
+            this.reflected = reflected;
+            this.probability = probability;
+        }
+    
+        public Ray getRay() {
+            return ray;
+        }
+    
+        public boolean isReflected() {
+            return reflected;
+        }
+    
+        public double getProbability() {
+            return probability;
         }
     }
 }

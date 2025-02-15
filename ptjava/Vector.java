@@ -1,15 +1,15 @@
 package ptjava;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.SplittableRandom;
 import jdk.incubator.vector.DoubleVector;
 import jdk.incubator.vector.VectorSpecies;
 import jdk.incubator.vector.VectorOperators;
-
 
 public class Vector {
 
     private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_256;
     public DoubleVector vec;
+    private Double cachedLength = null;
 
     public static Vector ORIGIN = new Vector(0, 0, 0);
 
@@ -29,17 +29,14 @@ public class Vector {
         return vec.lane(2);
     }
 
-    // Method to set X and return a new Vector3D
     public Vector withX(double x) {
         return new Vector(vec.withLane(0, x));
     }
 
-    // Method to set Y and return a new Vector3D
     public Vector withY(double y) {
         return new Vector(vec.withLane(1, y));
     }
 
-    // Method to set Z and return a new Vector3D
     public Vector withZ(double z) {
         return new Vector(vec.withLane(2, z));
     }
@@ -52,49 +49,42 @@ public class Vector {
         vec = DoubleVector.fromArray(SPECIES, new double[]{x, y, z, 0.0}, 0);
     }
 
-    public static Vector RandomUnitVector(ThreadLocalRandom rnd) {    
-        var z = rnd.nextDouble() * 2.0 - 1.0;
-        var a = rnd.nextDouble() * 2.0 * Math.PI;
-        var r = Math.sqrt(1.0 - z * z);
-        var x = Math.sin(a);
-        var y = Math.cos(a);
+    public static Vector RandomUnitVector(SplittableRandom rnd) {    
+        double z = rnd.nextDouble() * 2.0 - 1.0;
+        double a = rnd.nextDouble() * 2.0 * Math.PI;
+        double r = Math.sqrt(1.0 - z * z);
+        double x = Math.sin(a);
+        double y = Math.cos(a);
         return new Vector(r * x, r * y, z);
     } 
 
     public double Length() {
-        double sumOfSquares = this.vec.mul(this.vec).reduceLanes(VectorOperators.ADD);
-        return Math.sqrt(sumOfSquares);
+        if (cachedLength == null) {
+            cachedLength = Math.sqrt(this.vec.mul(this.vec).reduceLanes(VectorOperators.ADD));
+        }
+        return cachedLength;
     }
 
     public double LengthN(double n) {
         if (n == 2) {
             return this.Length();
         }
-
-        double sumOfPowers = this.vec.pow(n).reduceLanes(VectorOperators.ADD);
-        return Math.pow(sumOfPowers, 1.0 / n);
+        return Math.pow(this.vec.pow(n).reduceLanes(VectorOperators.ADD), 1.0 / n);
     }
 
     public double Dot(Vector b) {
-
-        DoubleVector product = this.vec.mul(b.vec);
-        return product.reduceLanes(VectorOperators.ADD);
+        return this.vec.mul(b.vec).reduceLanes(VectorOperators.ADD);
     }
 
     public Vector Cross(Vector b) {
-        double[] aComponents = new double[4];
-        double[] bComponents = new double[4];
-        this.vec.intoArray(aComponents, 0);
-        b.vec.intoArray(bComponents, 0);
-        double x = aComponents[1] * bComponents[2] - aComponents[2] * bComponents[1];
-        double y = aComponents[2] * bComponents[0] - aComponents[0] * bComponents[2];
-        double z = aComponents[0] * bComponents[1] - aComponents[1] * bComponents[0];
+        double x = this.getY() * b.getZ() - this.getZ() * b.getY();
+        double y = this.getZ() * b.getX() - this.getX() * b.getZ();
+        double z = this.getX() * b.getY() - this.getY() * b.getX();
         return new Vector(x, y, z);
     }
 
     public Vector Normalize() {
-        double length = this.Length();
-        return new Vector(this.vec.div(length));
+        return new Vector(this.vec.div(this.Length()));
     }
 
     public Vector Negate() {
@@ -122,15 +112,9 @@ public class Vector {
     }
 
     public Vector Mod(Vector b) {
-        double[] aComponents = new double[4];
-        double[] bComponents = new double[4];
-        this.vec.intoArray(aComponents, 0);
-        b.vec.intoArray(bComponents, 0);
-
-        double x = aComponents[0] % bComponents[0];
-        double y = aComponents[1] % bComponents[1];
-        double z = aComponents[2] % bComponents[2];
-
+        double x = this.getX() % b.getX();
+        double y = this.getY() % b.getY();
+        double z = this.getZ() % b.getZ();
         return new Vector(x, y, z);
     }
 
@@ -206,37 +190,34 @@ public class Vector {
     }
 
     public Vector Reflect(Vector i) {
-        return i.Sub(MulScalar(2 * Dot(i)));
+        return i.Sub(this.MulScalar(2 * this.Dot(i)));
     }
 
     public Vector Refract(Vector i, double n1, double n2) {
-        var nr = n1 / n2;
-        var cosI = -Dot(i);
-        var sinT2 = nr * nr * (1 - cosI * cosI);
+        double nr = n1 / n2;
+        double cosI = -this.Dot(i);
+        double sinT2 = nr * nr * (1 - cosI * cosI);
 
-        if (sinT2 > 1)
-        {
+        if (sinT2 > 1) {
             return new Vector();
         }
 
-        var cosT = Math.sqrt(1 - sinT2);
-
-        return i.MulScalar(nr).Add(MulScalar(nr * cosI - cosT));
+        double cosT = Math.sqrt(1 - sinT2);
+        return i.MulScalar(nr).Add(this.MulScalar(nr * cosI - cosT));
     }
 
     public double Reflectance(Vector i, double n1, double n2) {
-        var nr = n1 / n2;
-        var cosI = -Dot(i);
-        var sinT2 = nr * nr * (1 - cosI * cosI);
+        double nr = n1 / n2;
+        double cosI = -this.Dot(i);
+        double sinT2 = nr * nr * (1 - cosI * cosI);
 
-        if (sinT2 > 1)
-        {
+        if (sinT2 > 1) {
             return 1;
         }
 
-        var cosT = Math.sqrt(1 - sinT2);
-        var rOrth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-        var rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+        double cosT = Math.sqrt(1 - sinT2);
+        double rOrth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+        double rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
         return (rOrth * rOrth + rPar * rPar) / 2;
     }
 }

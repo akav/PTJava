@@ -23,7 +23,6 @@
  */
 
 package ptjava;
-import org.apache.commons.lang3.ArrayUtils;
 
 class Mesh extends TransformedShape {
 
@@ -69,7 +68,12 @@ class Mesh extends TransformedShape {
     }
 
     void Add(Mesh b) {
-        this.Triangles = ArrayUtils.addAll(this.Triangles, b.Triangles);
+        int aLength = this.Triangles.length;
+        int bLength = b.Triangles.length;
+        Triangle[] newTriangles = new Triangle[aLength + bLength];
+        System.arraycopy(this.Triangles, 0, newTriangles, 0, aLength);
+        System.arraycopy(b.Triangles, 0, newTriangles, aLength, bLength);
+        this.Triangles = newTriangles;
         this.dirty();
     }
 

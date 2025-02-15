@@ -6,8 +6,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import org.apache.commons.lang3.ArrayUtils;
+import java.util.SplittableRandom;
 
 public class Util {
 
@@ -30,7 +29,7 @@ public class Util {
         return radians * 180 / Math.PI;
     }
 
-    public static Vector Cone(Vector direction, double theta, double u, double v, ThreadLocalRandom rand) {
+    public static Vector Cone(Vector direction, double theta, double u, double v, SplittableRandom rand) {
         if (theta < EPS) {
             return direction;
         }
@@ -102,18 +101,16 @@ public class Util {
 
     double[] ParseFloats(String[] items) {
         double[] result = new double[items.length];
-        for (String item : items) {
-            double f = Double.parseDouble(item);
-            ArrayUtils.add(result, f);
+        for (int i = 0; i < items.length; i++) {
+            result[i] = Double.parseDouble(items[i]);
         }
         return result;
     }
 
     int[] ParseInts(String[] items) {
         int[] result = new int[items.length];
-        for (String item : items) {
-            int f = Integer.valueOf(item);
-            ArrayUtils.add(result, f);
+        for (int i = 0; i < items.length; i++) {
+            result[i] = Integer.parseInt(items[i]);
         }
         return result;
     }

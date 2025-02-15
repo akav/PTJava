@@ -54,8 +54,8 @@ class Tree {
 
     public Hit Intersect(Ray r) {
         var tm = Box.Intersect(r);
-        double tmin = (double)tm._0;
-        double tmax = (double)tm._1;
+        double tmin = tm[0];
+        double tmax = tm[1];
 
         if (tmax < tmin || tmax <= 0) {
             return Hit.NoHit;
@@ -91,13 +91,12 @@ class Tree {
         }
 
         Node NewNode(IShape[] shapes) {
-            Node n = new Node(Axis.AxisNone, 0, shapes, null, null);
-            return n;
+            return new Node(Axis.AxisNone, 0, shapes, null, null);
         }
 
         IShape[][] Partition(AtomicInteger size, Axis axis, double point) {
-            ArrayList<IShape> left = new ArrayList<>();
-            ArrayList<IShape> right = new ArrayList<>();
+            List<IShape> left = new ArrayList<>();
+            List<IShape> right = new ArrayList<>();
             
             for (IShape shape : Shapes) {
                 if (shape != null) {
@@ -114,11 +113,9 @@ class Tree {
                 }
             }
             
-            IShape[] lp = new IShape[left.size()];
-            IShape[] rp = new IShape[right.size()];
-            IShape[] leftp = left.toArray(lp);
-            IShape[] rightp = right.toArray(rp);
-            return new IShape[][]{leftp,rightp}; 
+            IShape[] leftp = left.toArray(new IShape[0]);
+            IShape[] rightp = right.toArray(new IShape[0]);
+            return new IShape[][]{leftp, rightp}; 
         }
 
         public Hit Intersect(Ray r, double tmin, double tmax) {
@@ -148,19 +145,13 @@ class Tree {
             Node first = leftFirst ? Left : Right;
             Node second = leftFirst ? Right : Left;
 
-            if (tsplit > tmax || tsplit <= 0)
-            {
+            if (tsplit > tmax || tsplit <= 0) {
                 return first.Intersect(r, tmin, tmax);
-            }
-            else if (tsplit < tmin)
-            {
+            } else if (tsplit < tmin) {
                 return second.Intersect(r, tmin, tmax);
-            }
-            else
-            {
+            } else {
                 Hit h1 = first.Intersect(r, tmin, tsplit);
-                if (h1.T <= tsplit)
-                {
+                if (h1.T <= tsplit) {
                     return h1;
                 }
                 Hit h2 = second.Intersect(r, tsplit, Math.min(tmax, h1.T));
@@ -170,8 +161,8 @@ class Tree {
 
         public Hit IntersectShapes(Ray r) {
             Hit hit = Hit.NoHit;
-            for (IShape shapes : Shapes) {
-                Hit h = shapes.Intersect(r);
+            for (IShape shape : Shapes) {
+                Hit h = shape.Intersect(r);
                 if (h.T < hit.T) {
                     hit = h;
                 }
@@ -180,17 +171,14 @@ class Tree {
         }
 
         public double Median(List<Double> list) {
-
             int middle = list.size() / 2;
 
-            if(list.size() == 0)
-            {
+            if (list.size() == 0) {
                 return 0;
-            }
-            else if (list.size() % 2 == 1) {
+            } else if (list.size() % 2 == 1) {
                 return list.get(middle);
             } else {
-                return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2.0;
+                return (list.get(middle - 1) + list.get(middle)) / 2.0;
             }
         }
 
@@ -198,9 +186,7 @@ class Tree {
             AtomicInteger left = new AtomicInteger(0);
             AtomicInteger right = new AtomicInteger(0);
             for (IShape shape : this.Shapes) {
-                
-                if(shape != null)
-                {
+                if (shape != null) {
                     Box box = shape.BoundingBox();
                     boolean[] lr = box.Partition(axis, point);
                     if (lr[0]) {
@@ -210,18 +196,11 @@ class Tree {
                         right.incrementAndGet();
                     }
                 }
-                
             }
-            if (left.get() >= right.get()) {
-                return left;
-            } else {
-                return right;
-            }
+            return left.get() >= right.get() ? left : right;
         }  
 
         public void Split(int depth) {
-
-        
             if (this.Shapes.length < 8) {
                 return;
             }
@@ -231,9 +210,7 @@ class Tree {
             List<Double> zs = new ArrayList<>();
 
             for (IShape shape : this.Shapes) {
-                
-                if(shape!= null)
-                {
+                if (shape != null) {
                     Box box = shape.BoundingBox();
                     xs.add(box.Min.getX());
                     xs.add(box.Max.getX());
@@ -253,7 +230,7 @@ class Tree {
             double mz = Median(zs);
 
             AtomicInteger best = new AtomicInteger((int)(Shapes.length * 0.85));
-            ptjava.Axis bestAxis = Axis.AxisNone;
+            Axis bestAxis = Axis.AxisNone;
             double bestPoint = 0.0;
 
             var sx = PartitionScore(Axis.AxisX, mx);

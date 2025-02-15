@@ -24,6 +24,7 @@
 
 package ptjava;
 
+
 class Box {
 
     public Vector Min;
@@ -99,9 +100,9 @@ class Box {
         || Max.getY() < b.Min.getY() 
         || Min.getZ() > b.Max.getZ() 
         || Max.getZ() < b.Min.getZ());
-    }
+        }
 
-    public Tuple2 Intersect(Ray r) {
+        public double[] Intersect(Ray r) {
         double x1 = (Min.getX() - r.Origin.getX()) / r.Direction.getX();
         double y1 = (Min.getY() - r.Origin.getY()) / r.Direction.getY();
         double z1 = (Min.getZ() - r.Origin.getZ()) / r.Direction.getZ();
@@ -109,32 +110,28 @@ class Box {
         double y2 = (Max.getY() - r.Origin.getY()) / r.Direction.getY();
         double z2 = (Max.getZ() - r.Origin.getZ()) / r.Direction.getZ();
         
-        if(x1 > x2)
-        {
-            Tuple2<Double,Double> x1_x2 = Tuple.valueOf(x2, x1);
-            x1 = x1_x2._0;
-            x2 = x1_x2._1;
+        if(x1 > x2) {
+            double temp = x1;
+            x1 = x2;
+            x2 = temp;
         }
-        if(y1 > y2)
-        {
-            Tuple2<Double,Double> y1_y2 = Tuple.valueOf(y2, y1);
-            y1 = y1_y2._0;
-            y2 = y1_y2._1;
+        if(y1 > y2) {
+            double temp = y1;
+            y1 = y2;
+            y2 = temp;
         }
-        if(z1 > z2)
-        {
-            Tuple2<Double,Double> z1_z2 = Tuple.valueOf(z2, z1);
-            z1 = z1_z2._0;
-            z2 = z1_z2._1;
+        if(z1 > z2) {
+            double temp = z1;
+            z1 = z2;
+            z2 = temp;
         }
         
         double t1 = Math.max(Math.max(x1, y1), z1);
         double t2 = Math.min(Math.min(x2, y2), z2);
-        Tuple2 intersect = new Tuple2(t1, t2);
-        return intersect;
-    }
+        return new double[]{t1, t2};
+        }
 
-    public boolean[] Partition(Axis axis, double point) {
+        public boolean[] Partition(Axis axis, double point) {
         switch (axis) {
             case AxisX:
                 left = Min.getX() <= point;
