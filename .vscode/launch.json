@@ -1,9 +1,14 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        {
+            "type": "java",
+            "name": "PTmain",
+            "request": "launch",
+            "mainClass": "ptjava.PTmain",
+            "projectName": "PTJava_9c445199",
+            "vmArgs": "--add-modules=jdk.incubator.vector"
+        },
         {
             "type": "java",
             "name": "Current File",
@@ -16,7 +21,8 @@
             "name": "ptmain",
             "request": "launch",
             "mainClass": "ptjava.ptmain",
-            "projectName": "PTJava_48390a29"
+            "projectName": "PTJava_48390a29",
+            "vmArgs": "--add-modules=jdk.incubator.vector"
         }
     ]
 }
