@@ -52,8 +52,8 @@ public class Example {
         scene.Add(Cube.NewCube(new Vector(-1000, -1, -1000), new Vector(1000, 0, 1000), Material.GlossyMaterial(Colour.HexColor(0xFFFFFF), 1.4, Util.Radians(20))));
         scene.Add(Sphere.NewSphere(new Vector(0, 5, 0), 1, Material.LightMaterial(Colour.White, 25)));
         Camera camera = Camera.LookAt(new Vector(0, 3, 6), new Vector(0, 1, 0), new Vector(0, 1, 0), 30);
-        DefaultSampler sampler = DefaultSampler.NewSampler(12,3);
-        Renderer renderer = Renderer.NewRenderer(scene, camera, sampler, 1920, 1080);
+        DefaultSampler sampler = DefaultSampler.NewSampler(64,6);
+        Renderer renderer = Renderer.NewRenderer(scene, camera, sampler, WIDTH, HEIGHT);
         renderer.FireflySamples = 128;
         renderer.IterativeRender("materialspheres.png", 500, renderedImage, renderPanel);
     }
@@ -249,7 +249,7 @@ public class Example {
         var camera = Camera.LookAt(new Vector(0, -1500, 200), new Vector(0, -100, 0), new Vector(0, 0, 1), 20);
         camera.SetFocus(new Vector(0, 20000, 0), 1);
         var sampler = DefaultSampler.NewSampler(4, 4);
-        var renderer = Renderer.NewRenderer(scene, camera, sampler, 1920, 1080);
+        var renderer = Renderer.NewRenderer(scene, camera, sampler, WIDTH, HEIGHT);
         renderer.IterativeRender("runway.png", 1000, renderedImage, renderPanel);
     }
 }

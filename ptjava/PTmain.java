@@ -54,7 +54,7 @@ public class PTmain {
 
         Thread renderingThread = new Thread(() -> {
             try {
-                Example.example3(WIDTH, HEIGHT, renderedImage, renderPanel);
+                Example.MaterialSpheres(WIDTH, HEIGHT, renderedImage, renderPanel);
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             } catch (Exception e) {
