@@ -1,6 +1,6 @@
 package ptjava;
 
-import java.util.SplittableRandom;
+import java.util.concurrent.ThreadLocalRandom;
 import jdk.incubator.vector.DoubleVector;
 import jdk.incubator.vector.VectorSpecies;
 import jdk.incubator.vector.VectorOperators;
@@ -8,10 +8,12 @@ import jdk.incubator.vector.VectorOperators;
 public class Vector {
 
     private static final VectorSpecies<Double> SPECIES = DoubleVector.SPECIES_256;
+    
     public DoubleVector vec;
-    private Double cachedLength = null;
-
-    public static Vector ORIGIN = new Vector(0, 0, 0);
+    public static Vector ZERO = new Vector(0, 0, 0);
+    public static Vector UP = new Vector(0, 1, 0);
+    public static Vector RIGHT = new Vector(1, 0, 0);
+    public static Vector FORWARD = new Vector(0, 0, 1);
 
     public Vector() {
         vec = DoubleVector.fromArray(SPECIES, new double[]{0, 0, 0, 0.0}, 0);
@@ -49,7 +51,7 @@ public class Vector {
         vec = DoubleVector.fromArray(SPECIES, new double[]{x, y, z, 0.0}, 0);
     }
 
-    public static Vector RandomUnitVector(SplittableRandom rnd) {    
+    public static Vector RandomUnitVector(ThreadLocalRandom rnd) {    
         double z = rnd.nextDouble() * 2.0 - 1.0;
         double a = rnd.nextDouble() * 2.0 * Math.PI;
         double r = Math.sqrt(1.0 - z * z);
@@ -59,10 +61,7 @@ public class Vector {
     } 
 
     public double Length() {
-        if (cachedLength == null) {
-            cachedLength = Math.sqrt(this.vec.mul(this.vec).reduceLanes(VectorOperators.ADD));
-        }
-        return cachedLength;
+        return Math.sqrt(this.vec.pow(2).reduceLanes(VectorOperators.ADD));
     }
 
     public double LengthN(double n) {
@@ -74,7 +73,7 @@ public class Vector {
 
     public double Dot(Vector b) {
         return this.vec.mul(b.vec).reduceLanes(VectorOperators.ADD);
-    }
+    }    
 
     public Vector Cross(Vector b) {
         double x = this.getY() * b.getZ() - this.getZ() * b.getY();

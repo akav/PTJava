@@ -23,7 +23,14 @@
  */
 
 package ptjava;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 interface Texture {
     Colour Sample(double u, double v);
@@ -42,6 +49,9 @@ class ColorTexture implements Texture {
     double INF = 1e9;
     double EPS = 1e-9;
 
+    // Create a Dictionary for texture maps
+    static Map<String, ITexture> TextureMap = new HashMap<String, ITexture>();
+
     ColorTexture() {
         this.Width = 0;
         this.Height = 0;
@@ -53,6 +63,42 @@ class ColorTexture implements Texture {
         this.Width = width;
         this.Height = height;
         this.Data = data;
+    }
+   
+    public static ITexture GetTexture(String path) {
+        if (TextureMap.containsKey(path)) {
+            System.out.println("Texture: " + path + " ... OK");
+            return TextureMap.get(path);
+        } else {
+            System.out.println("Adding texture to list...");
+            ITexture img = LoadTexture(path);
+            TextureMap.put(path, img);
+            return img;
+        }
+    }
+
+    private static ITexture LoadTexture(String path) {
+        try {
+            BufferedImage image = ImageIO.read(new File(path));
+            int width = image.getWidth();
+            int height = image.getHeight();
+            Colour[] data = new Colour[width * height];
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int rgb = image.getRGB(x, y);
+                    int r = (rgb >> 16) & 0xFF;
+                    int g = (rgb >> 8) & 0xFF;
+                    int b = rgb & 0xFF;
+                    data[y * width + x] = new Colour(r / 255.0, g / 255.0, b / 255.0);
+                }
+            }
+
+            return (ITexture) new ColorTexture(width, height, data);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return (ITexture) new ColorTexture();
+        }
     }
 
     @Override
@@ -132,4 +178,6 @@ class ColorTexture implements Texture {
         Colour c = this.Sample(u, v);
         return new Vector(c.r * 2 - 1, c.g * 2 - 1, c.b * 2 - 1).Normalize();
     }
+
+   
 }

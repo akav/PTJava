@@ -1,12 +1,14 @@
 
 package ptjava;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.SplittableRandom;
+import java.util.concurrent.ThreadLocalRandom;
+
 
 public class Util {
 
@@ -29,7 +31,7 @@ public class Util {
         return radians * 180 / Math.PI;
     }
 
-    public static Vector Cone(Vector direction, double theta, double u, double v, SplittableRandom rand) {
+    public static Vector Cone(Vector direction, double theta, double u, double v, ThreadLocalRandom rand) {
         if (theta < EPS) {
             return direction;
         }
@@ -136,5 +138,14 @@ public class Util {
     static int[] ParseInts_(String[] items) {
         int[] intarray = Arrays.stream(items).mapToInt(Integer::parseInt).toArray();
         return intarray;
+    }
+
+    public static Mesh CreateBrick(int color) throws IOException
+    {
+        var material = Material.GlossyMaterial(Colour.HexColor(color), 1.3F, Radians(20));
+        var mesh = STL.Load("models/toybrick.stl", material);
+        mesh.SmoothNormalsThreshold(Radians(20));
+        mesh.FitInside(new Box(new Vector(), new Vector(2, 4, 10)), new Vector( 0, 0, 0 ));
+        return mesh;
     }
 }

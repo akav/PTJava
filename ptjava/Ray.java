@@ -24,7 +24,7 @@
 
 package ptjava;
 
-import java.util.SplittableRandom;
+import java.util.concurrent.ThreadLocalRandom;
 import ptjava.Hit.HitInfo;
 
 public class Ray {
@@ -54,7 +54,7 @@ public class Ray {
         return this.Direction.Reflectance(i.Direction, n1, n2);
     }
 
-    public Ray WeightedBounce(double u, double v, SplittableRandom rand) {
+    public Ray WeightedBounce(double u, double v, ThreadLocalRandom rand) {
         var radius = Math.sqrt(u);
         var theta = 2 * Math.PI * v;
         var s = Direction.Cross(Vector.RandomUnitVector(rand)).Normalize();
@@ -66,11 +66,11 @@ public class Ray {
         return new Ray(Origin, d);
     }
 
-    public Ray ConeBounce(double theta, double u, double v, SplittableRandom rand) {
+    public Ray ConeBounce(double theta, double u, double v, ThreadLocalRandom rand) {
         return new Ray(this.Origin, Util.Cone(Direction, theta, u, v, rand));
     }
 
-    public BounceResult Bounce(HitInfo info, double u, double v, BounceType bounceType, SplittableRandom rand) {
+    public BounceResult Bounce(HitInfo info, double u, double v, BounceType bounceType, ThreadLocalRandom rand) {
         Ray n = info.Ray;
         Material material = info.material;
 

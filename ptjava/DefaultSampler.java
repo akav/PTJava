@@ -23,10 +23,11 @@
  */
 
 package ptjava;
-import java.util.SplittableRandom;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 interface Sampler {
-    Colour Sample(Scene scene, Ray ray, SplittableRandom  rand);
+    Colour Sample(Scene scene, Ray ray, ThreadLocalRandom  rand);
 }
 
 class DefaultSampler implements Sampler {
@@ -60,12 +61,12 @@ class DefaultSampler implements Sampler {
     }
 
     @Override
-    public Colour Sample(Scene scene, Ray ray, SplittableRandom rand) {
+    public Colour Sample(Scene scene, Ray ray, ThreadLocalRandom rand) {
 
         return sample(scene, ray, true, FirstHitSamples, 0, rand);
     }
 
-    Colour sample(Scene scene, Ray ray, boolean emission, int samples, int depth, SplittableRandom rand) {
+    Colour sample(Scene scene, Ray ray, boolean emission, int samples, int depth, ThreadLocalRandom rand) {
         if (depth > MaxBounces) {
             return Colour.Black;
         }
@@ -153,7 +154,7 @@ class DefaultSampler implements Sampler {
         return scene.Color;
     }
 
-    Colour sampleLights(Scene scene, Ray n, SplittableRandom rand) {
+    Colour sampleLights(Scene scene, Ray n, ThreadLocalRandom rand) {
         int nLights = scene.Lights.length;
         if (nLights == 0) {
             return Colour.Black;
@@ -174,7 +175,7 @@ class DefaultSampler implements Sampler {
         }
     }
 
-    Colour sampleLight(Scene scene, Ray n, SplittableRandom rand, IShape light) {
+    Colour sampleLight(Scene scene, Ray n, ThreadLocalRandom rand, IShape light) {
         Vector center = new Vector();
         double radius = 0;
 
@@ -244,4 +245,13 @@ class DefaultSampler implements Sampler {
         double m = material.Emittance * diffuse * coverage;
         return material.Color.MulScalar(m);
     }
+
+    public void SetSpecularMode(SpecularMode sm) {
+        this.specularMode = sm;
+    }
+
+    public void SetLightMode(LightMode lm) {
+        this.lightMode = lm;
+    }
+
 }

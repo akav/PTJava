@@ -63,6 +63,12 @@ class Scene {
         Shapes = shapeList.toArray(Shapes);
     }
 
+    void Add(List<IShape> shapes) {
+        for (IShape shape : shapes) {
+            Add(shape);
+        }
+    }
+
     int RayCount() {
         return rays.incrementAndGet();
     }

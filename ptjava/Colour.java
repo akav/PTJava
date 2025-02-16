@@ -66,7 +66,11 @@ public class Colour {
         if (val.compareTo(min) < 0) return min;
         else if (val.compareTo(max) > 0) return max;
         else return val;
-    }   
+    }
+    
+    public double LengthSquared() {
+        return this.r * this.r + this.g * this.g + this.b * this.b;
+    }
 
     public static int getIntFromColor(double red, double green, double blue) {
         

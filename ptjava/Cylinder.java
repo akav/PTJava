@@ -39,7 +39,7 @@ class Cylinder extends TransformedShape {
         this.CylinderMaterial = material;
     }
     
-    Cylinder NewCylinder(double radius, double z0, double z1, Material material) {
+    static Cylinder NewCylinder(double radius, double z0, double z1, Material material) {
         return new Cylinder(radius, z0, z1, material);
     }
     
@@ -49,15 +49,18 @@ class Cylinder extends TransformedShape {
         double z = d.Length();
         double a = Math.acos(d.Normalize().Dot(up));
         Matrix m = new Matrix().Translate(v0);
-        if (a!=0)
-        {
+        if (a != 0) {
             Vector u = d.Cross(up).Normalize();
             m = m.Rotate(u, a).Translate(v0);
         }
         Cylinder c = NewCylinder(radius, 0, z, material);
-        return NewTransformedShape(c,m);
-        
-    } 
+        return NewTransformedShape(c, m);
+    }
+
+    @Override
+    public void Compile() {
+       
+    }
     
     @Override
     public Box BoundingBox() {
@@ -77,46 +80,66 @@ class Cylinder extends TransformedShape {
 
     @Override
     public Vector NormalAt(Vector p) {
-        //p.Z = 0;
         p = new Vector(p.getX(), p.getY(), 0);
         return p.Normalize();
     }
     
     @Override
     public Hit Intersect(Ray ray) {
-        double r = this.Radius;
+        double r = Radius;
         Vector o = ray.Origin;
         Vector d = ray.Direction;
+
+        // Calculate intersection with top and bottom planes
+        double tTop = (Z1 - o.getZ()) / d.getZ();
+        double tBottom = (Z0 - o.getZ()) / d.getZ();
+
+        // Calculate intersection with lateral surface
         double a = d.getX() * d.getX() + d.getY() * d.getY();
-        double b = 2 * o.getX() * d.getX() + 2 * o.getY() * d.getY();
+        double b = 2 * (o.getX() * d.getX() + o.getY() * d.getY());
         double c = o.getX() * o.getX() + o.getY() * o.getY() - r * r;
-        double q = b*b - 4*a*c;
-        if(q < EPS )
-        {
-            return Hit.NoHit;
-        }
-        double s = Math.sqrt(q);
-        double t0 = (-b + s) / (2 * a);
-        double t1 = (-b - s) / (2 * a);
-        if (t0 > t1)
-        {
-            // swap values
-            double temp = t0;
-            t0 = t1;
-            t1 = temp;
-        }
-        double z0 = o.getZ() + t0 * d.getZ();
-        double z1 = o.getZ() + t1 * d.getZ();
+        double discriminant = b * b - 4 * a * c;
 
-        if (t0 > EPS && this.Z0 < z0 && z0 < this.Z1)
-        {
-            return new Hit(this, t0, null);
+        // Check if ray intersects with top surface
+        if (tTop > EPS && tTop > 0) {
+            Vector intersectionTop = o.Add(d.MulScalar(tTop));
+            double distanceToCenterTop = Math.sqrt(intersectionTop.getX() * intersectionTop.getX() + intersectionTop.getY() * intersectionTop.getY());
+            if (distanceToCenterTop <= r) {
+                return new Hit(this, tTop, null);
+            }
         }
 
-        if (t1 > EPS && this.Z0 < z1 && z1 < this.Z1)
-        {
-            return new Hit(this, t1, null);
+        // Check if ray intersects with bottom surface
+        if (tBottom > EPS && tBottom > 0) {
+            Vector intersectionBottom = o.Add(d.MulScalar(tBottom));
+            double distanceToCenterBottom = Math.sqrt(intersectionBottom.getX() * intersectionBottom.getX() + intersectionBottom.getY() * intersectionBottom.getY());
+            if (distanceToCenterBottom <= r) {
+                return new Hit(this, tBottom, null);
+            }
         }
+
+        // Check if ray intersects with lateral surface
+        if (discriminant >= 0) {
+            double sqrtDiscriminant = Math.sqrt(discriminant);
+            double t1 = (-b + sqrtDiscriminant) / (2 * a);
+            double t2 = (-b - sqrtDiscriminant) / (2 * a);
+
+            double tLateral = Double.NaN;
+            if (t1 > EPS && t1 > 0) {
+                tLateral = t1;
+            } else if (t2 > EPS && t2 > 0) {
+                tLateral = t2;
+            }
+
+            if (!Double.isNaN(tLateral)) {
+                Vector intersectionLateral = o.Add(d.MulScalar(tLateral));
+                double z = intersectionLateral.getZ();
+                if (z >= Z0 && z <= Z1) {
+                    return new Hit(this, tLateral, null);
+                }
+            }
+        }
+
         return Hit.NoHit;
     }
 }

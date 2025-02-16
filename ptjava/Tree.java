@@ -52,6 +52,15 @@ class Tree {
         Root = node;
     }
 
+    static Tree NewTree(IShape[] shapes) {
+        System.out.println("Building k-d tree: " + shapes.length);
+        var box = BoxForShapes(shapes);
+        var node = Node.NewNode(shapes);
+        node.Split(0);
+        return new Tree(box, node);
+    }
+
+
     public Hit Intersect(Ray r) {
         var tm = Box.Intersect(r);
         double tmin = tm[0];
@@ -66,7 +75,7 @@ class Tree {
 
     public class Node {
 
-        Axis Axis;
+        Axis Axis_;
         double Point;
         IShape[] Shapes;
         Node Left;
@@ -75,7 +84,7 @@ class Tree {
         public Node(){}
 
         Node(Axis axis, double point, IShape[] shapes, Node left, Node right) {
-            this.Axis = axis;
+            this.Axis_ = axis;
             this.Point = point;
             this.Shapes = shapes;
             this.Left = left;
@@ -83,15 +92,15 @@ class Tree {
         }
 
         public Node(List<IShape> shapes) {
-            this.Axis = ptjava.Axis.AxisNone;
+            this.Axis_ = Axis.AxisNone;
             this.Point = 0;
             this.Shapes = shapes.toArray(new IShape[shapes.size()]);
             this.Left = null;
             this.Right = null;
         }
 
-        Node NewNode(IShape[] shapes) {
-            return new Node(Axis.AxisNone, 0, shapes, null, null);
+        static Node NewNode(IShape[] shapes) {
+            return new Tree().new Node(Axis.AxisNone, 0, shapes, null, null);
         }
 
         IShape[][] Partition(AtomicInteger size, Axis axis, double point) {
@@ -123,7 +132,7 @@ class Tree {
             double tsplit = 0;
             boolean leftFirst = false;
 
-            switch (Axis) {
+            switch (Axis_) {
                 case AxisNone:
                     return IntersectShapes(r);
                 case AxisX:
@@ -259,7 +268,7 @@ class Tree {
             }
         
             var partitions = Partition(best, bestAxis, bestPoint);
-            Axis = bestAxis;
+            Axis_ = bestAxis;
             Point = bestPoint;
             Left = NewNode(partitions[0]);
             Right = NewNode(partitions[1]);

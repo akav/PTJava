@@ -24,7 +24,7 @@
 
 package ptjava;
 
-import java.util.SplittableRandom;
+import java.util.concurrent.ThreadLocalRandom;
 
 class Camera {
 
@@ -54,7 +54,7 @@ class Camera {
         this.apertureRadius = apertureRadius;
     }
 
-    public Ray CastRay(int x, int y, Integer w, int h, Double u, Double v, SplittableRandom  rand) {
+    public Ray CastRay(int x, int y, Integer w, int h, Double u, Double v, ThreadLocalRandom  rand) {
         double aspect = w / (double)h;
         var px = (((double)x + u - 0.5) / ((double)w - 1.0)) * 2 - 1;
         var py = (((double)y + v - 0.5) / ((double)h - 1.0)) * 2 - 1;
