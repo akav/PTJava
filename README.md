@@ -6,6 +6,6 @@ Quick run:
 - Select PTmain and start without debugging
 
 Current status:
-- Base examples function without issue
-- Volume conversion not completed
-- OBJ and STL loader not completed
+- Additional base examples included
+- STL loader completed
+- OBJ loader currently in progress
